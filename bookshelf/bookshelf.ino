@@ -2,29 +2,48 @@
 
 #include <FastLED.h>
 
-FASTLED_USING_NAMESPACE
+#include "LEDStrip.h"
 
-#if defined(FASTLED_VERSION) && (FASTLED_VERSION < 3001000)
-#warning "Requires FastLED 3.1 or later; check github for latest code."
-#endif
+FASTLED_USING_NAMESPACE
 
 #define DATA_PIN        9
 #define LED_TYPE        WS2812B
 #define COLOR_ORDER     GRB
 #define LEDS_PER_STRIP  15
-#define NUM_LEDS        90
+#define NUM_LEDS        120
+#define BRIGHTNESS      85
+
+#define HORIZ_ROWS       3
+#define HORIZ_COLS       2
+#define VERT_ROWS        2
+#define VERT_COLS        1
 
 int NUM_STRIPS = NUM_LEDS / LEDS_PER_STRIP;
 
 CRGB leds[NUM_LEDS];
 
-#define BRIGHTNESS          85
-#define FRAMES_PER_SECOND  120
+bool stripGoesForwards(LEDStrip strip) {
+  // quick assertion that the length is correct
+  // assert(abs(start - end) == LEDS_PER_STRIP - 1)
+  // its forwards if end > start
+  return strip.end > strip.start;
+}
+
+LEDStrip horizStrips[HORIZ_ROWS][HORIZ_COLS] = {
+  {{0, 14}, {29, 15}},
+  {{30, 44}, {59, 45}},
+  {{60, 74}, {89, 75}},
+};
+
+LEDStrip vertStrips[VERT_ROWS][VERT_COLS] = {
+  {{90, 104}},
+  {{119, 105}},
+};
 
 void setup() {
-//  Serial.begin(9600);
+ Serial.begin(9600);
   
-  delay(3000); // 3 second delay for recovery
+  delay(1000); // 1 second delay for recovery
   
   // tell FastLED about the LED strip configuration
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
@@ -32,14 +51,9 @@ void setup() {
   // set master brightness control
   FastLED.setBrightness(BRIGHTNESS);
 }
-  
+
 void loop() {
-//  for (int i = 0; i < 5; i++) {
-//    cradle(80);  
-//  }
-//  randomSampleLoop(3);
-  allToColorInStrips();
-  delay(800);
+  cradle2D(80);
 }
 
 void allToColor(CHSV color) {
@@ -93,7 +107,43 @@ void moveOnLine(int start, int end, int frameRate) {
   }
 }
 
-void cradle(int frameRate) {
+// puts a new color in this index
+void updateColor(int ind) {
+  leds[ind] = getNewColor(leds[ind]);
+  FastLED.show();
+}
+
+void cradle2D(int frameRate) {
+  // weird but just the way it works right now
+  int vertStart = vertStrips[0][0].start;
+  int vertEnd = vertStrips[1][0].start;
+
+  CRGB startColor;
+  if (leds[vertStart] != CRGB(0, 0, 0)) {
+    startColor = leds[vertStart];
+  } else {
+    startColor = randomColor();
+  }
+
+  colorCradle(vertStart, vertEnd, startColor);
+
+  int stripRow = random(HORIZ_ROWS);
+  int stripCol = random(HORIZ_COLS);
+  LEDStrip strip = horizStrips[stripRow][stripCol];
+
+  leds[strip.end] = startColor;
+  FastLED.show();
+  moveOnLine(strip.end, strip.start, frameRate);
+  updateColor(strip.start);
+  moveOnLine(strip.start, strip.end, frameRate);
+
+  CRGB newColor = leds[strip.end];
+  leds[strip.end] = CRGB::Black;
+
+  colorCradle(vertStart, vertEnd, newColor);
+}
+
+void cradle1D(int frameRate) {
   // cradle stuff
   int cradleSize = ceil(NUM_LEDS / 3);
   
@@ -136,5 +186,3 @@ void randomSampleLoop(int numLoops) {
     delay(300);
   }
 }
-
-#define ARRAY_SIZE(A) (sizeof(A) / sizeof((A)[0]))
