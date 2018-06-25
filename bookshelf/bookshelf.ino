@@ -196,7 +196,7 @@ void cradle2D(int row, int col) {
   moveOnStripWithPhysics(strip.start, strip.end, true);
 
   CRGB newColor = leds[strip.end];
-  leds[strip.end] = CHSV::Black;
+  leds[strip.end] = CRGB::Black;
 
   colorCradle(vertStart, vertEnd, newColor);
 }
