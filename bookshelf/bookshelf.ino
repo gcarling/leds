@@ -53,7 +53,7 @@ void setup() {
 }
 
 void loop() {
-  complementPatternLoop(3);
+  // complementPatternLoop(3);
   downwardsCradle();
 }
 
@@ -109,29 +109,44 @@ void colorCradle(int cradleStart, int cradleEnd, CRGB newColor) {
   FastLED.show();
 }
 
-void moveOnLine(int start, int end, int frameRate) {
-  int offset = start < end ? 1 : -1;
-
-  for (int cur = start + offset; cur != end + offset; cur += offset) {
-    delay(frameRate);
-    leds[cur] = leds[cur - offset];
-    leds[cur - offset] = CRGB(0, 0, 0);
-    FastLED.show();
-  }
-}
-
 void moveOnStripWithPhysics(int start, int end, bool shouldAccelerate) {
   int offset = start < end ? 1 : -1;
 
-  for (int cur = start + offset; cur != end + offset; cur += offset) {
+  int startValue = start + offset;
+
+  for (int cur = startValue; cur != end + offset; cur += offset) {
     // if we should accelerate, start slow go faster. Otherwise do the opposite
     int distFromStart = abs(start - cur);
     int baseDelay = shouldAccelerate ? LEDS_PER_STRIP - distFromStart : distFromStart;
     delay((75 + baseDelay*baseDelay) / 4);
-    leds[cur] = leds[cur - offset];
-    leds[cur - offset] = CRGB(0, 0, 0);
+
+    // final iteration
+    if (cur == end) {
+      leds[cur] = leds[cur - offset];
+      for (int inner = startValue; inner != end; inner += offset) {
+        leds[inner] = CRGB::Black;
+      }
+    } else {
+      for (int inner = cur; inner != startValue - offset; inner -= offset) {
+        CHSV oldColor = rgb2hsv_approximate(leds[inner - offset]);
+        leds[inner] = oldColor;
+
+        int newValue = oldColor.value - 20;
+        if (newValue < 0) {
+          break;
+        }
+
+        leds[inner - offset] = CHSV(oldColor.hue, oldColor.saturation, newValue);
+      }
+    }
+
+
     FastLED.show();
   }
+
+  // for (int cur = start + offset; cur != end + offset; cur += offset) {
+  //   leds[cur] = CRGB::Black;
+  // }
 }
 
 // puts a new color in this index
@@ -181,38 +196,9 @@ void cradle2D(int row, int col) {
   moveOnStripWithPhysics(strip.start, strip.end, true);
 
   CRGB newColor = leds[strip.end];
-  leds[strip.end] = CRGB::Black;
+  leds[strip.end] = CHSV::Black;
 
   colorCradle(vertStart, vertEnd, newColor);
-}
-
-void cradle1D(int frameRate) {
-  // cradle stuff
-  int cradleSize = ceil(NUM_LEDS / 3);
-  
-  int cradleStart = floor(NUM_LEDS / 3);
-  int cradleEnd = NUM_LEDS - floor(NUM_LEDS / 3) - 1;
-
-  CRGB startColor;
-  if (leds[cradleStart] != CRGB(0, 0, 0)) {
-    startColor = leds[cradleStart];
-  } else {
-    startColor = randomColor();
-  }
-  
-  colorCradle(cradleStart, cradleEnd, startColor);
-
-  moveOnLine(cradleEnd, NUM_LEDS - 1, frameRate);
-  leds[NUM_LEDS - 1] = getNewColor(leds[NUM_LEDS - 1]);
-  FastLED.show();
-  moveOnLine(NUM_LEDS - 1, cradleEnd, frameRate);
-  // color cradle
-  colorCradle(cradleStart, cradleEnd, leds[cradleEnd]);
-  moveOnLine(cradleStart, 0, frameRate);
-  leds[0] = getNewColor(leds[0]);
-  FastLED.show();
-  moveOnLine(0, cradleStart, frameRate);
-  colorCradle(cradleStart, cradleEnd, leds[cradleStart]);
 }
 
 // random colors
