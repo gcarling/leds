@@ -41,7 +41,7 @@ LEDStrip vertStrips[VERT_ROWS][VERT_COLS] = {
 };
 
 void setup() {
- Serial.begin(9600);
+//  Serial.begin(9600);
   
   delay(1000); // 1 second delay for recovery
   
@@ -53,7 +53,8 @@ void setup() {
 }
 
 void loop() {
-  cradle2D(80);
+  downwardsCradle();
+  randomSampleLoop(3);
 }
 
 void allToColor(CHSV color) {
@@ -107,13 +108,43 @@ void moveOnLine(int start, int end, int frameRate) {
   }
 }
 
+void moveOnStripWithPhysics(int start, int end, bool shouldAccelerate) {
+  int offset = start < end ? 1 : -1;
+
+  for (int cur = start + offset; cur != end + offset; cur += offset) {
+    // if we should accelerate, start slow go faster. Otherwise do the opposite
+    int distFromStart = abs(start - cur);
+    int baseDelay = shouldAccelerate ? LEDS_PER_STRIP - distFromStart : distFromStart;
+    delay((75 + baseDelay*baseDelay) / 4);
+    leds[cur] = leds[cur - offset];
+    leds[cur - offset] = CRGB(0, 0, 0);
+    FastLED.show();
+  }
+}
+
 // puts a new color in this index
 void updateColor(int ind) {
   leds[ind] = getNewColor(leds[ind]);
   FastLED.show();
 }
 
-void cradle2D(int frameRate) {
+void downwardsCradle() {
+  for (int r = 0; r < HORIZ_ROWS; r++) {
+    bool reverse = r % 2 != 0;
+    if (!reverse) {
+      for (int c = 0; c < HORIZ_COLS; c++) {
+        cradle2D(r, c);
+      }
+    } else {
+      for (int c = HORIZ_COLS - 1; c >= 0; c--) {
+        cradle2D(r, c);
+      }
+    }
+  }
+}
+
+void cradle2D(int row, int col) {
+  int frameRate = 80;
   // weird but just the way it works right now
   int vertStart = vertStrips[0][0].start;
   int vertEnd = vertStrips[1][0].start;
@@ -127,15 +158,15 @@ void cradle2D(int frameRate) {
 
   colorCradle(vertStart, vertEnd, startColor);
 
-  int stripRow = random(HORIZ_ROWS);
-  int stripCol = random(HORIZ_COLS);
-  LEDStrip strip = horizStrips[stripRow][stripCol];
+  // int stripRow = random(HORIZ_ROWS);
+  // int stripCol = random(HORIZ_COLS);
+  LEDStrip strip = horizStrips[row][col];
 
   leds[strip.end] = startColor;
   FastLED.show();
-  moveOnLine(strip.end, strip.start, frameRate);
+  moveOnStripWithPhysics(strip.end, strip.start, false);
   updateColor(strip.start);
-  moveOnLine(strip.start, strip.end, frameRate);
+  moveOnStripWithPhysics(strip.start, strip.end, true);
 
   CRGB newColor = leds[strip.end];
   leds[strip.end] = CRGB::Black;
