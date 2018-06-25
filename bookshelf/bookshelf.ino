@@ -53,8 +53,8 @@ void setup() {
 }
 
 void loop() {
+  complementPatternLoop(3);
   downwardsCradle();
-  randomSampleLoop(3);
 }
 
 void allToColor(CHSV color) {
@@ -74,7 +74,19 @@ void allToColorInStrips() {
   FastLED.show();
 }
 
-// helpers
+void colorStrip(LEDStrip strip, CHSV color) {
+  int offset = strip.start < strip.end ? 1 : -1;
+
+  for (int cur = strip.start; cur != strip.end + offset; cur += offset) {
+    leds[cur] = color;
+  }
+}
+
+CHSV getComplement(CHSV color) {
+  int newHue = (color.hue + 128) % 256;
+  return CHSV(newHue, color.saturation, color.value);
+}
+
 CHSV randomColor() {
   int color = random(256);
 
@@ -215,5 +227,42 @@ void randomSampleLoop(int numLoops) {
     randomSample();
     FastLED.show();
     delay(300);
+  }
+}
+
+// A is plus color, B is background
+void colorPlus(CHSV colorA, CHSV colorB) {
+  LEDStrip strip;
+  for (int row = 0; row < HORIZ_ROWS; row++){ 
+    for (int col = 0; col < HORIZ_COLS; col++) {
+      strip = horizStrips[row][col];
+      CHSV color = row % 2 == 0 ? colorB : colorA;
+      colorStrip(strip, color);
+    }
+  }
+
+  for (int row = 0; row < VERT_ROWS; row++){ 
+    for (int col = 0; col < VERT_COLS; col++) {
+      strip = vertStrips[row][col];
+      colorStrip(strip, colorA);
+    }
+  }
+  FastLED.show();
+}
+
+// complement stuff
+void complementPattern() {
+  CHSV colorA = randomColor();
+  CHSV colorB = getComplement(colorA);
+
+  colorPlus(colorA, colorB);
+  delay(1000);
+  colorPlus(colorB, colorA);
+  delay(1000);
+}
+
+void complementPatternLoop(int iterations) {
+  for (int i = 0; i < iterations; i++) {
+    complementPattern();
   }
 }
