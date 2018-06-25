@@ -53,7 +53,9 @@ void setup() {
 }
 
 void loop() {
-  // complementPatternLoop(3);
+  complementPatternLoop(3);
+  downwardsCradle();
+  randomSampleLoop(2);
   downwardsCradle();
 }
 
