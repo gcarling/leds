@@ -10,13 +10,13 @@ FASTLED_USING_NAMESPACE
 #define LED_TYPE        WS2812B
 #define COLOR_ORDER     GRB
 #define LEDS_PER_STRIP  15
-#define NUM_LEDS        120
+#define NUM_LEDS        180
 #define BRIGHTNESS      85
 
 #define HORIZ_ROWS       3
 #define HORIZ_COLS       2
 #define VERT_ROWS        2
-#define VERT_COLS        1
+#define VERT_COLS        3
 
 int NUM_STRIPS = NUM_LEDS / LEDS_PER_STRIP;
 
@@ -31,13 +31,13 @@ bool stripGoesForwards(LEDStrip strip) {
 
 LEDStrip horizStrips[HORIZ_ROWS][HORIZ_COLS] = {
   {{0, 14}, {29, 15}},
-  {{30, 44}, {59, 45}},
+  {{59, 45}, {30, 44}},
   {{60, 74}, {89, 75}},
 };
 
 LEDStrip vertStrips[VERT_ROWS][VERT_COLS] = {
-  {{90, 104}},
-  {{119, 105}},
+  {{179, 165}, {120, 134}, {119, 105}},
+  {{150, 164}, {149, 135}, {90, 104}},
 };
 
 void setup() {
@@ -57,6 +57,7 @@ void loop() {
   downwardsCradle();
   randomSampleLoop(2);
   downwardsCradle();
+  // allToColor(CHSV(200, 255, BRIGHTNESS));
 }
 
 void allToColor(CHSV color) {
@@ -151,23 +152,18 @@ void moveOnStripWithPhysics(int start, int end, bool shouldAccelerate) {
   // }
 }
 
-// puts a new color in this index
-void updateColor(int ind) {
-  leds[ind] = getNewColor(leds[ind]);
+// puts a new color in this index, returns new color
+CRGB updateColor(int ind) {
+  CRGB newColor = getNewColor(leds[ind]);
+  leds[ind] = newColor;
   FastLED.show();
+  return newColor;
 }
 
 void downwardsCradle() {
   for (int r = 0; r < HORIZ_ROWS; r++) {
-    bool reverse = r % 2 != 0;
-    if (!reverse) {
-      for (int c = 0; c < HORIZ_COLS; c++) {
-        cradle2D(r, c);
-      }
-    } else {
-      for (int c = HORIZ_COLS - 1; c >= 0; c--) {
-        cradle2D(r, c);
-      }
+    for (int c = 0; c < HORIZ_COLS; c++) {
+      cradle2D(r, c);
     }
   }
 }
@@ -175,17 +171,30 @@ void downwardsCradle() {
 void cradle2D(int row, int col) {
   int frameRate = 80;
   // weird but just the way it works right now
-  int vertStart = vertStrips[0][0].start;
-  int vertEnd = vertStrips[1][0].start;
+  int midStart = vertStrips[0][1].start;
+  int midEnd = vertStrips[1][1].start;
+
+  // If we're on left, we change left pillar on end
+  bool isLeft = col == 0;
+  int sideStart;
+  int sideEnd;
+  if (isLeft) {
+    sideStart = vertStrips[1][0].start;
+    sideEnd = vertStrips[0][0].start;
+  } else {
+    sideStart = vertStrips[1][2].start;
+    sideEnd = vertStrips[0][2].start;
+  }
+
 
   CRGB startColor;
-  if (leds[vertStart] != CRGB(0, 0, 0)) {
-    startColor = leds[vertStart];
+  if (leds[midStart] != CRGB(0, 0, 0)) {
+    startColor = leds[midStart];
   } else {
     startColor = randomColor();
   }
 
-  colorCradle(vertStart, vertEnd, startColor);
+  colorCradle(midStart, midEnd, startColor);
 
   // int stripRow = random(HORIZ_ROWS);
   // int stripCol = random(HORIZ_COLS);
@@ -194,13 +203,16 @@ void cradle2D(int row, int col) {
   leds[strip.end] = startColor;
   FastLED.show();
   moveOnStripWithPhysics(strip.end, strip.start, false);
-  updateColor(strip.start);
+
+  // Update color, handle strip
+  CRGB newColor = updateColor(strip.start);
+  colorCradle(sideStart, sideEnd, newColor);
+
   moveOnStripWithPhysics(strip.start, strip.end, true);
 
-  CRGB newColor = leds[strip.end];
   leds[strip.end] = CRGB::Black;
 
-  colorCradle(vertStart, vertEnd, newColor);
+  colorCradle(midStart, midEnd, newColor);
 }
 
 // random colors
@@ -232,7 +244,8 @@ void colorPlus(CHSV colorA, CHSV colorB) {
   for (int row = 0; row < VERT_ROWS; row++){ 
     for (int col = 0; col < VERT_COLS; col++) {
       strip = vertStrips[row][col];
-      colorStrip(strip, colorA);
+      CHSV color = col % 2 == 0 ? colorB : colorA;
+      colorStrip(strip, color);
     }
   }
   FastLED.show();
