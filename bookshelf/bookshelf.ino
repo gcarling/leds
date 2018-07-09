@@ -57,14 +57,34 @@ void setup() {
 void loop() {
   boxStuff();
   downwardsCradle();
+  horizBars(3);
   complementPatternLoop(2);
   randomPlus(10);
   downwardsCradle();
+  horizBars(3);
 }
 
 void allToColor(CRGB color) {
   for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] = color;
+  }
+  FastLED.show();
+}
+
+void allHorizToColor(CRGB color) {
+  for (int r = 0; r < HORIZ_ROWS; r++) {
+    for (int c = 0; c < HORIZ_COLS; c++) {
+      colorStripRGB(horizStrips[r][c], color);
+    }
+  }
+  FastLED.show();
+}
+
+void allVertToColor(CRGB color) {
+  for (int r = 0; r < VERT_ROWS; r++) {
+    for (int c = 0; c < VERT_COLS; c++) {
+      colorStripRGB(vertStrips[r][c], color);
+    }
   }
   FastLED.show();
 }
@@ -333,13 +353,9 @@ CHSV plusBox() {
   CHSV testo[2] = {CHSV(0, 0, 0), CHSV(0, 0, 0)};
   complementPattern(testo);
   colorPlus(testo[0], CHSV(0, 0, 0));
-  delay(500);
+  delay(600);
   colorPlus(CHSV(0, 0, 0), testo[1]);
-  delay(500);
-  colorPlus(testo[0], CHSV(0, 0, 0));
-  delay(500);
-  colorPlus(CHSV(0, 0, 0), testo[1]);
-  delay(500);
+  delay(600);
 
   return testo[0];
 }
@@ -349,4 +365,26 @@ void boxStuff() {
   spinny(spinColor, 5, false);
   spinColor = plusBox();
   spinny(spinColor, 2, true);
+}
+
+void horizBars(int iterations) {
+  allHorizToColor(CRGB::Black);
+  FastLED.show();
+  delay(200);
+  CHSV color = randomColor();
+
+  for (int n = 0; n < iterations; n++) {
+    for (int r = 0; r < HORIZ_ROWS; r++) {
+      allHorizToColor(CRGB::Black);
+      for (int c = 0; c < HORIZ_COLS; c++) {
+        colorStrip(horizStrips[r][c], color);
+      }
+      FastLED.show();
+      delay(200);
+    }
+  }
+
+  allHorizToColor(CRGB::Black);
+  FastLED.show();
+  delay(200);
 }
