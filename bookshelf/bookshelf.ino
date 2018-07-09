@@ -53,14 +53,13 @@ void setup() {
 }
 
 void loop() {
-  complementPatternLoop(3);
+  boxStuff();
   downwardsCradle();
-  randomSampleLoop(2);
-  downwardsCradle();
-  // allToColor(CHSV(200, 255, BRIGHTNESS));
+  randomSampleLoop(5);
+  complementPatternLoop(2);
 }
 
-void allToColor(CHSV color) {
+void allToColor(CRGB color) {
   for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] = color;
   }
@@ -78,6 +77,14 @@ void allToColorInStrips() {
 }
 
 void colorStrip(LEDStrip strip, CHSV color) {
+  int offset = strip.start < strip.end ? 1 : -1;
+
+  for (int cur = strip.start; cur != strip.end + offset; cur += offset) {
+    leds[cur] = color;
+  }
+}
+
+void colorStripRGB(LEDStrip strip, CRGB color) {
   int offset = strip.start < strip.end ? 1 : -1;
 
   for (int cur = strip.start; cur != strip.end + offset; cur += offset) {
@@ -252,7 +259,7 @@ void colorPlus(CHSV colorA, CHSV colorB) {
 }
 
 // complement stuff
-void complementPattern() {
+void complementPattern(CHSV finalColors[]) {
   CHSV colorA = randomColor();
   CHSV colorB = getComplement(colorA);
 
@@ -260,10 +267,66 @@ void complementPattern() {
   delay(1000);
   colorPlus(colorB, colorA);
   delay(1000);
+
+  if (sizeof(finalColors == 2)) {
+    finalColors[0] = colorA;
+    finalColors[1] = colorB;
+  }
 }
 
 void complementPatternLoop(int iterations) {
   for (int i = 0; i < iterations; i++) {
-    complementPattern();
+    CHSV fake[] = {};
+    complementPattern(fake);
   }
+}
+
+void spinny(CRGB startColor, int iterations, bool darthMaul) {
+  LEDStrip centerStrips[4] = {horizStrips[1][0], vertStrips[0][1], horizStrips[1][1], vertStrips[1][1]};
+
+  int offsetStart = random(4);
+  int isForwards = random(1) == 0;
+  if (!isForwards) {
+    offsetStart = offsetStart * -1;
+  }
+
+  for (int n = 0; n < iterations; n++) {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        LEDStrip cur = centerStrips[j];
+        colorStripRGB(cur, CRGB::Black);
+      }
+      int curInd = (i + offsetStart) % 4;
+      colorStripRGB(centerStrips[curInd], startColor);
+      if (darthMaul) {
+        int otherInd = (curInd + 2) % 4;
+        colorStripRGB(centerStrips[otherInd], startColor);
+      }
+      FastLED.show();
+      delay(darthMaul ? 600 : 150);
+    }
+  }
+}
+
+// returns plus color
+CHSV plusBox() {
+  CHSV testo[2] = {CHSV(0, 0, 0), CHSV(0, 0, 0)};
+  complementPattern(testo);
+  colorPlus(testo[0], CHSV(0, 0, 0));
+  delay(500);
+  colorPlus(CHSV(0, 0, 0), testo[1]);
+  delay(500);
+  colorPlus(testo[0], CHSV(0, 0, 0));
+  delay(500);
+  colorPlus(CHSV(0, 0, 0), testo[1]);
+  delay(500);
+
+  return testo[0];
+}
+
+void boxStuff() {
+  CHSV spinColor = plusBox();
+  spinny(spinColor, 5, false);
+  spinColor = plusBox();
+  spinny(spinColor, 2, true);
 }
