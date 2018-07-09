@@ -40,6 +40,8 @@ LEDStrip vertStrips[VERT_ROWS][VERT_COLS] = {
   {{150, 164}, {149, 135}, {90, 104}},
 };
 
+LEDStrip plusStrips[4] = {horizStrips[1][0], vertStrips[0][1], horizStrips[1][1], vertStrips[1][1]};
+
 void setup() {
 //  Serial.begin(9600);
   
@@ -55,8 +57,9 @@ void setup() {
 void loop() {
   boxStuff();
   downwardsCradle();
-  randomSampleLoop(5);
   complementPatternLoop(2);
+  randomPlus(10);
+  downwardsCradle();
 }
 
 void allToColor(CRGB color) {
@@ -81,6 +84,14 @@ void colorStrip(LEDStrip strip, CHSV color) {
 
   for (int cur = strip.start; cur != strip.end + offset; cur += offset) {
     leds[cur] = color;
+  }
+}
+
+void randomStrip(LEDStrip strip) {
+  int offset = strip.start < strip.end ? 1 : -1;
+
+  for (int cur = strip.start; cur != strip.end + offset; cur += offset) {
+    leds[cur] = randomColor();
   }
 }
 
@@ -258,6 +269,17 @@ void colorPlus(CHSV colorA, CHSV colorB) {
   FastLED.show();
 }
 
+void randomPlus(int iterations) {
+  for (int n = 0; n < iterations; n++) {
+    for (int s = 0; s < 4; s++) {
+      LEDStrip strip = plusStrips[s];
+      randomStrip(strip);
+    }
+    FastLED.show();
+    delay(200);
+  }
+}
+
 // complement stuff
 void complementPattern(CHSV finalColors[]) {
   CHSV colorA = randomColor();
@@ -282,25 +304,23 @@ void complementPatternLoop(int iterations) {
 }
 
 void spinny(CRGB startColor, int iterations, bool darthMaul) {
-  LEDStrip centerStrips[4] = {horizStrips[1][0], vertStrips[0][1], horizStrips[1][1], vertStrips[1][1]};
-
   int offsetStart = random(4);
-  int isForwards = random(1) == 0;
-  if (!isForwards) {
-    offsetStart = offsetStart * -1;
-  }
+  // int isForwards = random(2) == 0;
+  // if (!isForwards) {
+  //   offsetStart = offsetStart * -1;
+  // }
 
   for (int n = 0; n < iterations; n++) {
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
-        LEDStrip cur = centerStrips[j];
+        LEDStrip cur = plusStrips[j];
         colorStripRGB(cur, CRGB::Black);
       }
       int curInd = (i + offsetStart) % 4;
-      colorStripRGB(centerStrips[curInd], startColor);
+      colorStripRGB(plusStrips[curInd], startColor);
       if (darthMaul) {
         int otherInd = (curInd + 2) % 4;
-        colorStripRGB(centerStrips[otherInd], startColor);
+        colorStripRGB(plusStrips[otherInd], startColor);
       }
       FastLED.show();
       delay(darthMaul ? 600 : 150);
