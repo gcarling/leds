@@ -22,13 +22,6 @@ int NUM_STRIPS = NUM_LEDS / LEDS_PER_STRIP;
 
 CRGB leds[NUM_LEDS];
 
-bool stripGoesForwards(LEDStrip strip) {
-  // quick assertion that the length is correct
-  // assert(abs(start - end) == LEDS_PER_STRIP - 1)
-  // its forwards if end > start
-  return strip.end > strip.start;
-}
-
 LEDStrip horizStrips[HORIZ_ROWS][HORIZ_COLS] = {
   {{0, 14}, {29, 15}},
   {{59, 45}, {30, 44}},

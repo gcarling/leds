@@ -1,5 +1,10 @@
 #include <FastLED.h>
 
+bool stripGoesForwards(LEDStrip strip) {
+  // its forwards if end > start
+  return strip.end > strip.start;
+}
+
 void colorStrip(LEDStrip strip, CHSV color) {
   int offset = strip.start < strip.end ? 1 : -1;
 
