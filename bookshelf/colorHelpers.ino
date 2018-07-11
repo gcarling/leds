@@ -1,5 +1,24 @@
 #include <FastLED.h>
 
+CHSV getComplement(CHSV color) {
+  int newHue = (color.hue + 128) % 256;
+  return CHSV(newHue, color.saturation, color.value);
+}
+
+CHSV randomColor() {
+  int color = random(256);
+
+  return CHSV(color, 255, BRIGHTNESS);
+}
+
+CRGB getNewColor(CRGB oldColor) {
+  CRGB newColor = randomColor();
+  while (oldColor == newColor) {
+    newColor = randomColor();   
+  }
+  return newColor;
+}
+
 CHSV rgbToHsv(CRGB in)
 {
     CHSV         out;
@@ -43,3 +62,5 @@ CHSV rgbToHsv(CRGB in)
 
     return out;
 }
+
+
