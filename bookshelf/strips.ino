@@ -13,6 +13,12 @@ void colorStrip(LEDStrip strip, CHSV color) {
   }
 }
 
+void colorStrips(LEDStrip strips[], int len, CHSV color) {
+  for (int i = 0; i < len; i++) {
+    colorStrip(strips[i], color);
+  }
+}
+
 void randomStrip(LEDStrip strip) {
   int offset = strip.start < strip.end ? 1 : -1;
 

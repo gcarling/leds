@@ -49,7 +49,8 @@ void loop() {
   boxStuff();
   downwardsCradle();
   horizBars(3);
-  complementPatternLoop(2);
+  squareRotate(3);
+  complementPattern();
   randomPlus(10);
   allToColorInStripsLoop(3);
   downwardsCradle();

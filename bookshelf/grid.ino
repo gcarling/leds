@@ -154,3 +154,29 @@ void horizBars(int iterations) {
   FastLED.show();
   delay(200);
 }
+
+void colorCorner(int corner, CHSV color) {
+  LEDStrip squares[4][4] = {
+    {horizStrips[0][0], vertStrips[0][1], horizStrips[1][0], vertStrips[0][0]},
+    {horizStrips[0][1], vertStrips[0][2], horizStrips[1][1], vertStrips[0][1]},
+    {horizStrips[1][1], vertStrips[1][2], horizStrips[2][1], vertStrips[1][1]},
+    {horizStrips[1][0], vertStrips[1][1], horizStrips[2][0], vertStrips[1][0]},
+  };
+
+  colorStrips(squares[corner], 4, color);
+}
+
+void squareRotate(int iterations) {
+  CHSV colorA = randomColor();
+  CHSV colorB = getComplement(colorA);
+
+  for (int i = 0; i < iterations * 4; i++) {
+    allToColor(CRGB::Black);
+    int corner1 = i % 4;
+    int corner2 = (i + 2) % 4;
+    colorCorner(corner1, colorA);
+    colorCorner(corner2, colorB);
+    FastLED.show();
+    delay(300);
+  }
+}
