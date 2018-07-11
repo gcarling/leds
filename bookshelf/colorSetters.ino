@@ -35,6 +35,13 @@ void allToColorInStrips() {
   FastLED.show();
 }
 
+void allToColorInStripsLoop(int iterations) {
+  for (int i = 0; i < iterations; i++) {
+    allToColorInStrips();
+    delay(500);
+  }
+}
+
 
 // random colors
 void randomSample() {

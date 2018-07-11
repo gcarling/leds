@@ -57,8 +57,41 @@ void complementPatternLoop(int iterations) {
   }
 }
 
-void spinny(CRGB startColor, int iterations, bool darthMaul) {
+void colorSide(CHSV innerColor, CHSV outerColor, int side) {
+  LEDStrip mid;
+  LEDStrip outer[2];
+
+  switch (side) {
+    case 0: 
+      mid = vertStrips[0][1];
+      outer[0] = horizStrips[0][0];
+      outer[1] = horizStrips[0][1];
+      break;
+    case 1: 
+      mid = horizStrips[1][1];
+      outer[0] = vertStrips[0][2];
+      outer[1] = vertStrips[1][2];
+      break;
+    case 2: 
+      mid = vertStrips[1][1];
+      outer[0] = horizStrips[2][0];
+      outer[1] = horizStrips[2][1];
+      break;
+    case 3: 
+      mid = horizStrips[1][0];
+      outer[0] = vertStrips[0][0];
+      outer[1] = vertStrips[1][0];
+      break;
+  }
+
+  colorStrip(mid, innerColor);
+  colorStrip(outer[0], outerColor);
+  colorStrip(outer[1], outerColor);
+}
+
+void spinny(CHSV colors[], int iterations, bool darthMaul) {
   int offsetStart = random(4);
+
   // int isForwards = random(2) == 0;
   // if (!isForwards) {
   //   offsetStart = offsetStart * -1;
@@ -66,15 +99,12 @@ void spinny(CRGB startColor, int iterations, bool darthMaul) {
 
   for (int n = 0; n < iterations; n++) {
     for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        LEDStrip cur = plusStrips[j];
-        colorStripRGB(cur, CRGB::Black);
-      }
+      allToColor(CRGB::Black);
       int curInd = (i + offsetStart) % 4;
-      colorStripRGB(plusStrips[curInd], startColor);
+      colorSide(colors[0], colors[1], curInd);
       if (darthMaul) {
         int otherInd = (curInd + 2) % 4;
-        colorStripRGB(plusStrips[otherInd], startColor);
+        colorSide(colors[0], colors[1], otherInd);
       }
       FastLED.show();
       delay(darthMaul ? 600 : 150);
@@ -83,22 +113,24 @@ void spinny(CRGB startColor, int iterations, bool darthMaul) {
 }
 
 // returns plus color
-CHSV plusBox() {
-  CHSV testo[2] = {CHSV(0, 0, 0), CHSV(0, 0, 0)};
+CHSV plusBox(CHSV plusColors[]) {
+  CHSV testo[2] = {CHSV(0,0,0), CHSV(0,0,0)};
   complementPattern(testo);
   colorPlus(testo[0], CHSV(0, 0, 0));
   delay(600);
   colorPlus(CHSV(0, 0, 0), testo[1]);
   delay(600);
 
-  return testo[0];
+  plusColors[0] = testo[0];
+  plusColors[1] = testo[1];
 }
 
 void boxStuff() {
-  CHSV spinColor = plusBox();
-  spinny(spinColor, 5, false);
-  spinColor = plusBox();
-  spinny(spinColor, 2, true);
+  CHSV spinColors[] = {CHSV(0,0,0), CHSV(0,0,0)};
+  plusBox(spinColors);
+  spinny(spinColors, 5, false);
+  plusBox(spinColors);
+  spinny(spinColors, 2, true);
 }
 
 void horizBars(int iterations) {

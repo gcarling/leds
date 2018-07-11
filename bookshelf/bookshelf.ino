@@ -51,6 +51,7 @@ void loop() {
   horizBars(3);
   complementPatternLoop(2);
   randomPlus(10);
+  allToColorInStripsLoop(3);
   downwardsCradle();
   horizBars(3);
 }
