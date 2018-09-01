@@ -50,7 +50,7 @@ void loop() {
   downwardsCradle();
   horizBars(3);
   squareRotate(3);
-  complementPattern();
+  complementPatternLoop(1);
   randomPlus(10);
   allToColorInStripsLoop(3);
   downwardsCradle();

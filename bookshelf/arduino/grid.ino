@@ -40,9 +40,9 @@ void complementPattern(CHSV finalColors[]) {
   CHSV colorB = getComplement(colorA);
 
   colorPlus(colorA, colorB);
-  delay(1000);
+  delay(600);
   colorPlus(colorB, colorA);
-  delay(1000);
+  delay(600);
 
   if (sizeof(finalColors == 2)) {
     finalColors[0] = colorA;
@@ -92,22 +92,33 @@ void colorSide(CHSV innerColor, CHSV outerColor, int side) {
 void spinny(CHSV colors[], int iterations, bool darthMaul) {
   int offsetStart = random(4);
 
-  // int isForwards = random(2) == 0;
-  // if (!isForwards) {
-  //   offsetStart = offsetStart * -1;
-  // }
+  int isForwards = random(2) == 0;
 
   for (int n = 0; n < iterations; n++) {
-    for (int i = 0; i < 4; i++) {
-      allToColor(CRGB::Black);
-      int curInd = (i + offsetStart) % 4;
-      colorSide(colors[0], colors[1], curInd);
-      if (darthMaul) {
-        int otherInd = (curInd + 2) % 4;
-        colorSide(colors[0], colors[1], otherInd);
+    if (isForwards) {
+      for (int i = 0; i < 4; i++) {
+        allToColor(CRGB::Black);
+        int curInd = (i + offsetStart) % 4;
+        colorSide(colors[0], colors[1], curInd);
+        if (darthMaul) {
+          int otherInd = (curInd + 2) % 4;
+          colorSide(colors[0], colors[1], otherInd);
+        }
+        FastLED.show();
+        delay(darthMaul ? 450 : 150);
       }
-      FastLED.show();
-      delay(darthMaul ? 600 : 150);
+    } else {
+      for (int i = 3; i >= 0; i--) {
+        allToColor(CRGB::Black);
+        int curInd = (i + offsetStart) % 4;
+        colorSide(colors[0], colors[1], curInd);
+        if (darthMaul) {
+          int otherInd = (curInd + 2) % 4;
+          colorSide(colors[0], colors[1], otherInd);
+        }
+        FastLED.show();
+        delay(darthMaul ? 450 : 150);
+      }
     }
   }
 }
@@ -136,7 +147,7 @@ void boxStuff() {
 void horizBars(int iterations) {
   allHorizToColor(CRGB::Black);
   FastLED.show();
-  delay(200);
+  delay(180);
   CHSV color = randomColor();
 
   for (int n = 0; n < iterations; n++) {
@@ -146,7 +157,7 @@ void horizBars(int iterations) {
         colorStrip(horizStrips[r][c], color);
       }
       FastLED.show();
-      delay(200);
+      delay(180);
     }
   }
 
@@ -177,6 +188,6 @@ void squareRotate(int iterations) {
     colorCorner(corner1, colorA);
     colorCorner(corner2, colorB);
     FastLED.show();
-    delay(300);
+    delay(350);
   }
 }
